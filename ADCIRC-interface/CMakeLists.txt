@@ -19,6 +19,29 @@ else()
 endif()
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${ADCIRC_Extra_FORTRAN_FLAGS}")
 
+# Machine/OS specific CPP definitions
+if(SUN)
+  add_definitions(-DCMACHSUN)
+elseif(SGI)
+  add_definitions(-DSGI)
+elseif(CRAY)
+  add_definitions(-DCRAY)
+elseif(CRAYX1)
+  add_definitions(-DCRAYX1)
+elseif(UNIX)
+  add_definitions(-DLINUX)
+elseif(CYGWIN)
+  add_definitions(-DLINUX)
+elseif(WIN32)
+  add_definitions(-DWINDOWS)
+elseif(APPLE)
+  add_definitions(-DLINUX)
+endif(SUN)
+
+if(SUN_MACHINE)
+  add_definitions(-DCMACHSUN)
+endif(SUN_MACHINE)
+
 ###############################################################################
 ### File lists
 ###############################################################################
@@ -39,6 +62,9 @@ else(PRECISION_8BYTE)
   add_definitions(-DREAL4)
 endif(PRECISION_8BYTE)
 
+# User option to build adcprep
+set(BUILD_ADCPREP OFF CACHE BOOL "Build the MPI parallel ADCIRC preprocessor")
+
 # User option to build utilities
 set(BUILD_UTILITIES OFF CACHE BOOL "Build the ADCIRC utility programs")
 
@@ -46,10 +72,12 @@ set(BUILD_UTILITIES OFF CACHE BOOL "Build the ADCIRC utility programs")
 ### External libraries like metis etc.
 ###############################################################################
 
-#add_library(metis STATIC ${metis_src_files})
-#target_include_directories(metis PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/mod>
-#                                         $<INSTALL_INTERFACE:mod>)
-#set_target_properties(metis PROPERTIES EXCLUDE_FROM_ALL TRUE)
+if(BUILD_ADCPREP)
+  add_library(metis STATIC ${metis_src_files})
+  target_include_directories(metis PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/mod>
+                                           $<INSTALL_INTERFACE:mod>)
+  set_target_properties(metis PROPERTIES EXCLUDE_FROM_ALL TRUE)
+endif(BUILD_ADCPREP)
 
 ###############################################################################
 ### Library for ADCIRC
@@ -88,12 +116,32 @@ if(BUILD_UTILITIES)
   endforeach()
 endif(BUILD_UTILITIES)
 
+if(BUILD_ADCPREP)
+  add_executable(adcprep ${adcprep_src_files})
+  set_target_properties(adcprep PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod)
+  install(TARGETS adcprep RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+  add_library(mkdir ${CMAKE_CURRENT_SOURCE_DIR}/ADCIRC/prep/mkdir.c)
+  target_include_directories(mkdir PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/mod>
+                                          $<INSTALL_INTERFACE:mod>)
+  set_target_properties(mkdir PROPERTIES EXCLUDE_FROM_ALL TRUE)
+  target_link_libraries(adcprep mkdir)
+  add_dependencies(adcprep mkdir)
+
+  target_link_libraries(adcprep version)
+  add_dependencies(adcprep version)
+
+  target_link_libraries(adcprep metis)
+  add_dependencies(adcprep metis)
+endif(BUILD_ADCPREP)
+
 ###############################################################################
 ### Install
 ###############################################################################
 
 install(
-  TARGETS adcirc version
+  TARGETS adcirc
+          version
   EXPORT  adcirc-config
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
