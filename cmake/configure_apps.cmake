@@ -94,3 +94,7 @@ if(APP MATCHES "^(LND)$")
   set(NOAHMP     ON  CACHE BOOL "Enable NOAHMP"              FORCE)
   set(FMS        ON  CACHE BOOL "Enable FMS"                 FORCE)
 endif()
+
+if(APP MATCHES "^(COASTAL)$")
+  set(ADCIRC     ON  CACHE BOOL "Enable ADCIRC"              FORCE)
+endif()

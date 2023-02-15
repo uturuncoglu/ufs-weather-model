@@ -36,6 +36,9 @@ load(pathJoin("hpc-mpt", hpc_mpt_ver))
 
 load("ufs_common")
 
+prepend_path("MODULEPATH", "/glade/scratch/turuncu/COASTAL_APP/spack/share/spack/modules/linux-sles12-x86_64")
+load("parmetis-4.0.3-intel-2021.5.0-sngf7ia")
+
 setenv("CC", "mpicc")
 setenv("CXX", "mpicxx")
 setenv("FC", "mpif90")

@@ -16,7 +16,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules/Modules)
 ###############################################################################
 
 # Valid applications and choices
-list(APPEND VALID_APPS ATM ATMAERO ATMAQ ATMW ATML LND S2S S2SA S2SW S2SWA S2SWAL HAFS HAFSW HAFS-ALL NG-GODAS)
+list(APPEND VALID_APPS ATM ATMAERO ATMAQ ATMW ATML LND S2S S2SA S2SW S2SWA S2SWAL HAFS HAFSW HAFS-ALL NG-GODAS COASTAL)
 set(APP NONE CACHE BOOL "Application Name")
 if(NOT (APP IN_LIST VALID_APPS))
   message(FATAL_ERROR "${APP} is not a valid application.\nValid Applications are: ${VALID_APPS}")
@@ -34,6 +34,7 @@ set(STOCH_PHYS      OFF CACHE BOOL "Enable Stochastic Physics")
 set(CMEPS           OFF CACHE BOOL "Enable CMEPS")
 set(CDEPS           OFF CACHE BOOL "Enable CDEPS")
 set(NOAHMP          OFF CACHE BOOL "Enable NOAHMP")
+set(ADCIRC          OFF CACHE BOOL "Enable ADCIRC")
 
 # Configure selected application specific components
 message("")
@@ -52,6 +53,7 @@ message("STOCH_PHYS ....... ${STOCH_PHYS}")
 message("CDEPS ............ ${CDEPS}")
 message("CMEPS ............ ${CMEPS}")
 message("NOAHMP ........... ${NOAHMP}")
+message("ADCIRC ........... ${ADCIRC}")
 
 ###############################################################################
 ### Build Options
@@ -193,7 +195,7 @@ if(WW3)
 endif()
 
 ###############################################################################
-### Marine Components [MOM6, HYCOM, CICE6]
+### Marine Components [MOM6, HYCOM, CICE6, ADCIRC]
 ###############################################################################
 if(MOM6)
   add_subdirectory(MOM6-interface)
@@ -207,7 +209,11 @@ if(CICE6)
   add_subdirectory(CICE-interface)
 endif()
 
-###############################################################################
+if(ADCIRC)
+  add_subdirectory(ADCIRC-interface)
+endif()
+
+########################ADCIRC#######################################################
 ### Mediator Components [CMEPS]
 ###############################################################################
 if(CMEPS)
@@ -304,6 +310,12 @@ if(NOAHMP)
   add_dependencies(ufs noahmp)
   list(APPEND _ufs_defs_private FRONT_NOAHMP=lnd_comp_nuopc)
   list(APPEND _ufs_libs_public noahmp)
+endif()
+
+if(ADCIRC)
+  add_dependencies(ufs adcirc)
+  list(APPEND _ufs_defs_private FRONT_ADCIRC=adc_cap)
+  list(APPEND _ufs_libs_public adcirc)
 endif()
 
 target_compile_definitions(ufs PRIVATE "${_ufs_defs_private}")
