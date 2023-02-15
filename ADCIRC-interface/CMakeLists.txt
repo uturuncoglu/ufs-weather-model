@@ -4,23 +4,20 @@
 
 if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
   set(CMAKE_Fortran_FLAGS "-g -fbacktrace")
-  #set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fdefault-real-8 -fdefault-double-8")
-  #set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Waliasing -fcray-pointer -fconvert=big-endian -ffree-line-length-none -fno-range-check -fbacktrace")
-  #set(CMAKE_Fortran_FLAGS_RELEASE "-O2")
-  #set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -fcheck=bounds -ffpe-trap=invalid,zero,overflow,underflow" )
-  #set(CMAKE_Fortran_LINK_FLAGS "")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Waliasing -fcray-pointer -fconvert=big-endian -ffree-line-length -fno-range-check -fbacktrace")
+  set(CMAKE_Fortran_FLAGS_RELEASE "-O2")
+  set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -fcheck=bounds -ffpe-trap=invalid,zero,overflow,underflow" )
+  set(CMAKE_Fortran_LINK_FLAGS "")
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
-  #set(CMAKE_Fortran_FLAGS "-g -traceback")
-  #set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -i4 -r8")
-  #set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fno-alias -auto -safe-cray-ptr -ftz -assume byterecl -sox")
-  #set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -debug minimal -fp-model source")
-  #set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -check -check noarg_temp_created -check nopointer -fpe0 -ftrapuv -init=snan,arrays")
-  #set(CMAKE_Fortran_LINK_FLAGS "")
-  set(CMAKE_Fortran_FLAGS "-extend-source")
+  set(CMAKE_Fortran_FLAGS "-g -traceback")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fno-alias -auto -safe-cray-ptr -ftz -assume byterecl -sox -extend-source")
+  set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -debug minimal -fp-model source")
+  set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -check -check noarg_temp_created -check nopointer -fpe0 -ftrapuv -init=snan,arrays")
+  set(CMAKE_Fortran_LINK_FLAGS "")
 else()
   message(WARNING "Fortran compiler with ID ${CMAKE_Fortran_COMPILER_ID} will be used with CMake default options")
 endif()
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${MOM6_Extra_FORTRAN_FLAGS}")
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${ADCIRC_Extra_FORTRAN_FLAGS}")
 
 ###############################################################################
 ### File lists
@@ -32,22 +29,33 @@ include("adcirc_files.cmake")
 ### Options
 ###############################################################################
 
-if(32BIT)
-  message(STATUS "Compile with 32-bit precision")
-  add_definitions(-DREAL4)
-else()
+# User option for 8-byte real numbers (or 4-byte if turned off)
+set(PRECISION_8BYTE ON CACHE BOOL "Use 8-byte real numbers instead of 4-byte.")
+if(PRECISION_8BYTE)
   message(STATUS "Compile with 64-bit precision")
   add_definitions(-DREAL8)
-endif()
+else(PRECISION_8BYTE)
+  message(STATUS "Compile with 32-bit precision")
+  add_definitions(-DREAL4)
+endif(PRECISION_8BYTE)
+
+# User option to build utilities
+set(BUILD_UTILITIES OFF CACHE BOOL "Build the ADCIRC utility programs")
 
 ###############################################################################
-### Libraries
+### External libraries like metis etc.
 ###############################################################################
 
-### Create target library
+#add_library(metis STATIC ${metis_src_files})
+#target_include_directories(metis PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/mod>
+#                                         $<INSTALL_INTERFACE:mod>)
+#set_target_properties(metis PROPERTIES EXCLUDE_FROM_ALL TRUE)
+
+###############################################################################
+### Library for ADCIRC
+###############################################################################
+
 add_library(adcirc STATIC ${adcirc_src_files})
-
-### Set PUBLIC interfaces on the library
 set_target_properties(adcirc PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod)
 target_include_directories(adcirc PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/mod>
                                          $<INSTALL_INTERFACE:mod>)
@@ -57,7 +65,7 @@ target_link_libraries(adcirc PUBLIC esmf)
 ### Create source file/s
 ###############################################################################
 
-add_custom_target(version DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/version_cmake.F)
+add_library(version ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/version_cmake.F)
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/version_cmake.F
   COMMAND ./adcircVersion.sh ${CMAKE_CURRENT_SOURCE_DIR}/ADCIRC
@@ -65,31 +73,27 @@ add_custom_command(
     ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/version_cmake.F
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ADCIRC/scripts
   COMMENT "Generating ADCIRC version...")
-add_dependencies (adcirc version)
+set_target_properties(version PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod)
 
-#add_custom_command(
-#  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/version.F
-#  PRE_BUILD
-#  #COMMAND ./adcircVersion.sh ${CMAKE_CURRENT_SOURCE_DIR}/ADCIRC >/dev/null
-#  ${CMAKE_COMMAND} -E echo Hi this is a custom target
-#  #WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ADCIRC/scripts"
-#  #DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/ADCIRC/scripts/adcircVersion.sh"
-#  COMMENT "Generating version.F ..."
-#  VERBATIM)
+###############################################################################
+### Install utilities 
+###############################################################################
 
-  #OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/version_cmake.F
-  #COMMAND ./adcircVersion.sh ${CMAKE_CURRENT_SOURCE_DIR}/ADCIRC >/dev/null
-  #COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/ADCIRC/version.F
-  #        ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/version_cmake.F
-  #WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ADCIRC/scripts
-  #COMMENT "Generating ADCIRC version...")
+if(BUILD_UTILITIES)
+  foreach(UTIL_FILE ${util_src_files})
+    get_filename_component(UTIL_FILE_EXE ${UTIL_FILE} NAME_WE)
+    add_executable(${UTIL_FILE_EXE} ${UTIL_FILE})
+    set_target_properties(${UTIL_FILE_EXE} PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod)
+    install(TARGETS ${UTIL_FILE_EXE} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  endforeach()
+endif(BUILD_UTILITIES)
 
 ###############################################################################
 ### Install
 ###############################################################################
 
 install(
-  TARGETS adcirc
+  TARGETS adcirc version
   EXPORT  adcirc-config
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
