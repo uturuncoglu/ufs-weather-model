@@ -1,49 +1,30 @@
 ###############################################################################
-### ADCIRC Fortran compiler flags
+### Fortran compiler flags
 ###############################################################################
 
 if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
   set(CMAKE_Fortran_FLAGS "-g -fbacktrace")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Waliasing -fcray-pointer -fconvert=big-endian -ffixed-line-length-132 -fno-range-check -fbacktrace")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Waliasing -fcray-pointer -fconvert=big-endian -fno-range-check -fbacktrace")
   set(CMAKE_Fortran_FLAGS_RELEASE "-O2")
   set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -fcheck=bounds -ffpe-trap=invalid,zero,overflow,underflow" )
   set(CMAKE_Fortran_LINK_FLAGS "")
+  set(Fortran_LINELENGTH_FLAG "-ffixed-line-length-none")
+  set(Fortran_COMPILER_SPECIFIC_FLAG "-mcmodel=medium")
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
   set(CMAKE_Fortran_FLAGS "-g -traceback")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fno-alias -auto -safe-cray-ptr -ftz -assume byterecl -sox -extend-source")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fno-alias -auto -safe-cray-ptr -ftz -assume byterecl -sox")
   set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -debug minimal -fp-model source")
   set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -check -check noarg_temp_created -check nopointer -fpe0 -ftrapuv -init=snan,arrays")
   set(CMAKE_Fortran_LINK_FLAGS "")
+  set(Fortran_LINELENGTH_FLAG "-132")
+  set(Fortran_COMPILER_SPECIFIC_FLAG "-mcmodel=medium")
 else()
   message(WARNING "Fortran compiler with ID ${CMAKE_Fortran_COMPILER_ID} will be used with CMake default options")
 endif()
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${ADCIRC_Extra_FORTRAN_FLAGS}")
 
-# Machine/OS specific CPP definitions
-if(SUN)
-  add_definitions(-DCMACHSUN)
-elseif(SGI)
-  add_definitions(-DSGI)
-elseif(CRAY)
-  add_definitions(-DCRAY)
-elseif(CRAYX1)
-  add_definitions(-DCRAYX1)
-elseif(UNIX)
-  add_definitions(-DLINUX)
-elseif(CYGWIN)
-  add_definitions(-DLINUX)
-elseif(WIN32)
-  add_definitions(-DWINDOWS)
-elseif(APPLE)
-  add_definitions(-DLINUX)
-endif(SUN)
-
-if(SUN_MACHINE)
-  add_definitions(-DCMACHSUN)
-endif(SUN_MACHINE)
-
 ###############################################################################
-### File lists
+### File lists and macros
 ###############################################################################
 
 include("adcirc_files.cmake")
@@ -52,21 +33,101 @@ include("adcirc_files.cmake")
 ### Options
 ###############################################################################
 
+# User option to build configuration
+# Default configuration is MPI parallel version of ADCIRC (PADCIRC)
+set(ADCIRC_CONFIG PADCIRC CACHE STRING "Build configuration for ADCIRC")
+set_property(CACHE ADCIRC_CONFIG PROPERTY STRINGS ADCIRC ADCSWAN SWAN PADCIRC PADCSWAN PUNSWAN)
+
+if(ADCIRC_CONFIG STREQUAL "ADCIRC")
+  message(STATUS "Build the serial version of ADCIRC")
+  set(src_files ${adcirc_src_files})
+elseif(ADCIRC_CONFIG STREQUAL "ADCSWAN")
+  message(STATUS "Build the serial version of ADCIRC+SWAN")
+  set(src_files ${adcswan1_src_files} ${adcswan2_src_files})
+elseif(ADCIRC_CONFIG STREQUAL "SWAN")
+  message(STATUS "Build the serial version of SWAN")
+elseif(ADCIRC_CONFIG STREQUAL "PADCIRC")
+  message(STATUS "Build the MPI parallel version of ADCIRC")
+  set(src_files ${padcirc_src_files})
+elseif(ADCIRC_CONFIG STREQUAL "PADCSWAN")
+  message(STATUS "Build the MPI parallel version of ADCIRC+SWAN")
+  set(src_files ${padcswan1_src_files} ${padcswan_src_files}) 
+elseif(ADCIRC_CONFIG STREQUAL "PUNSWAN")
+  message(STATUS "Build the MPI parallel version of ADCIRC+UNSTRUCTURED SWAN")
+else()
+  message(FATAL_ERROR "${ADCIRC_CONFIG} configuration is not supported! 
+    Options: ADCIRC|ADCSWAN|SWAN|PADCIRC|PADCSWAN|PUNSWAN")
+endif()
+
 # User option for 8-byte real numbers (or 4-byte if turned off)
 set(PRECISION_8BYTE ON CACHE BOOL "Use 8-byte real numbers instead of 4-byte.")
 if(PRECISION_8BYTE)
-  message(STATUS "Compile with 64-bit precision")
-  add_definitions(-DREAL8)
+  set(PRECISION_FLAG "REAL8")
 else(PRECISION_8BYTE)
-  message(STATUS "Compile with 32-bit precision")
-  add_definitions(-DREAL4)
+  set(PRECISION_FLAG "REAL4")
 endif(PRECISION_8BYTE)
 
 # User option to build adcprep
-set(BUILD_ADCPREP OFF CACHE BOOL "Build the MPI parallel ADCIRC preprocessor")
+if(MPI)
+  set(BUILD_ADCPREP OFF CACHE BOOL "Build the MPI parallel ADCIRC preprocessor")
+endif(MPI)
 
 # User option to build utilities
 set(BUILD_UTILITIES OFF CACHE BOOL "Build the ADCIRC utility programs")
+
+###############################################################################
+### Set variables
+###############################################################################
+
+# Machine specific
+if(SUN)
+  set(MACHINE_FLAG "CMACHSUN")
+elseif(SGI)
+  set(MACHINE_FLAG "SGI")
+elseif(CRAY)
+  set(MACHINE_FLAG "CRAY")
+elseif(CRAYX1)
+  set(MACHINE_FLAG "CRAYX1")
+elseif(UNIX)
+  set(MACHINE_FLAG "LINUX")
+elseif(CYGWIN)
+  set(MACHINE_FLAG "LINUX")
+elseif(WIN32)
+  set(MACHINE_FLAG "WINDOWS")
+elseif(APPLE)
+  set(MACHINE_FLAG "LINUX")
+endif(SUN)
+
+if(SUN_MACHINE)
+  set(MACHINE_FLAG "${MACHINE_FLAG} -CMACHSUN")
+endif(SUN_MACHINE)
+
+if(VECTOR_COMPUTER)
+  set(ADCIRC_OPTION_FLAGS "${ADCIRC_OPTION_FLAGS} CVEC")
+else(VECTOR_COMPUTER)
+  set(ADCIRC_OPTION_FLAGS "${ADCIRC_OPTION_FLAGS} CSCA")
+endif(VECTOR_COMPUTER)
+string(STRIP ${ADCIRC_OPTION_FLAGS} ADCIRC_OPTION_FLAGS)
+
+# SWAN specific
+set(SWAN_FLAG "CSWAN")
+set(PREP_SWAN_FLAG "ADCSWAN")
+
+# MPI specific
+set(ADCIRC_MPI_FLAG "CMPI")
+
+# Combined 
+set(LOCAL_COMPILER_DEFINITIONS "${ADCIRC_OPTION_FLAGS} ${PRECISION_FLAG} ${MACHINE_FLAG}")
+separate_arguments(LOCAL_COMPILER_DEFINITIONS)
+
+###############################################################################
+### Find component specific dependencies
+###############################################################################
+
+if(ADCIRC_CONFIG STREQUAL "ADCSWAN" OR ADCIRC_CONFIG STREQUAL "SWAN" OR
+   ADCIRC_CONFIG STREQUAL "PADCSWAN" OR ADCIRC_CONFIG STREQUAL "PUNSWAN") 
+  find_package(Perl)
+endif()
 
 ###############################################################################
 ### External libraries like metis etc.
@@ -77,22 +138,18 @@ if(BUILD_ADCPREP)
   target_include_directories(metis PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/mod>
                                            $<INSTALL_INTERFACE:mod>)
   set_target_properties(metis PROPERTIES EXCLUDE_FROM_ALL TRUE)
+  if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
+    if(${CMAKE_C_COMPILER_VERSION} VERSION_GREATER 10 OR ${CMAKE_C_COMPILER_VERSION} VERSION_EQUAL 10)
+      set_target_properties(metis PROPERTIES COMPILE_FLAGS "-Wno-implicit-function-declaration")
+    endif()
+  endif()
 endif(BUILD_ADCPREP)
 
 ###############################################################################
-### Library for ADCIRC
+### Libraries
 ###############################################################################
 
-add_library(adcirc STATIC ${adcirc_src_files})
-set_target_properties(adcirc PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod)
-target_include_directories(adcirc PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/mod>
-                                         $<INSTALL_INTERFACE:mod>)
-target_link_libraries(adcirc PUBLIC esmf)
-
-###############################################################################
-### Create source file/s
-###############################################################################
-
+# Version
 add_library(version ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/version_cmake.F)
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/version_cmake.F
@@ -102,6 +159,36 @@ add_custom_command(
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ADCIRC/scripts
   COMMENT "Generating ADCIRC version...")
 set_target_properties(version PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod)
+set_target_properties(version PROPERTIES COMPILE_FLAGS "${Fortran_LINELENGTH_FLAG} ${Fortran_COMPILER_SPECIFIC_FLAG}")
+set_target_properties(version PROPERTIES EXCLUDE_FROM_ALL TRUE)
+
+# ADCIRC
+add_library(adcirc STATIC ${src_files})
+set_target_properties(adcirc PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod)
+target_include_directories(adcirc PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/mod>
+                                         $<INSTALL_INTERFACE:mod>)
+target_include_directories(adcirc PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/mod)
+set_target_properties(adcirc PROPERTIES COMPILE_FLAGS "${Fortran_LINELENGTH_FLAG} ${Fortran_COMPILER_SPECIFIC_FLAG}")
+message(STATUS ${LOCAL_COMPILER_DEFINITIONS})
+target_compile_definitions(adcirc PRIVATE ${LOCAL_COMPILER_DEFINITIONS})
+target_link_libraries(adcirc PUBLIC esmf)
+add_dependencies(adcirc version)
+
+# SWAN
+if(ADCIRC_CONFIG STREQUAL "PADCSWAN")
+  add_library(swan1p STATIC "${swan1parallel_src_files}")
+  add_library(swan2p STATIC "${swan2parallel_src_files}")
+  add_custom_command(
+    OUTPUT "${swan1parallel_src_files}" "${swan2parallel_src_files}"
+    COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/swan_parallel_source
+    COMMAND ${PERL} switch.pl -pun -adcirc -unix -outdir
+            ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/swan_parallel_source *.ftn *.ftn90
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ADCIRC/thirdparty/swan
+    COMMENT "Generating parallel unstructured SWAN sources...")
+  set_target_properties(swan1p PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod)
+  set_target_properties(swan2p PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod)
+  add_library(padcswan1 STATIC ${padcswan1_src_files})
+endif()
 
 ###############################################################################
 ### Install utilities 
@@ -119,7 +206,18 @@ endif(BUILD_UTILITIES)
 if(BUILD_ADCPREP)
   add_executable(adcprep ${adcprep_src_files})
   set_target_properties(adcprep PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod)
+  set_target_properties(adcprep PROPERTIES COMPILE_FLAGS "${Fortran_LINELENGTH_FLAG} ${Fortran_COMPILER_SPECIFIC_FLAG}")
+  target_compile_definitions(adcprep PRIVATE ${LOCAL_COMPILER_DEFINITIONS})
   install(TARGETS adcprep RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  if(NetCDF_FOUND)
+    target_compile_definitions(adcprep PRIVATE ADCNETCDF)
+    if(NetCDF4_FOUND)
+      target_compile_definitions(adcprep PRIVATE HAVE_NETCDF4)
+      target_compile_definitions(adcprep PRIVATE NETCDF_CAN_DEFLATE)
+    endif()
+    target_include_directories(adcprep PRIVATE ${NetCDF_Fortran_INCLUDE_DIRS})
+    target_link_libraries(adcprep NetCDF::NetCDF_Fortran)
+  endif()
 
   add_library(mkdir ${CMAKE_CURRENT_SOURCE_DIR}/ADCIRC/prep/mkdir.c)
   target_include_directories(mkdir PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/mod>

@@ -59,6 +59,9 @@
       use FRONT_MOM6,       only: MOM6_SS   => SetServices, &
                                   MOM6_SV   => SetVM
 #endif
+#ifdef FRONT_ADCIRC
+      use FRONT_ADCIRC,     only: ADCIRC_SS => SetServices
+#endif
 #ifdef FRONT_CDEPS_DOCN
       use FRONT_CDEPS_DOCN, only: DOCN_SS  => SetServices
 #endif
@@ -389,6 +392,14 @@
           if (trim(model) == "mom6") then
             call NUOPC_DriverAddComp(driver, trim(prefix), MOM6_SS, &
                MOM6_SV, info=info, petList=petList, comp=comp, rc=rc)
+            if (ChkErr(rc,__LINE__,u_FILE_u)) return
+            found_comp = .true.
+          end if
+#endif
+#ifdef FRONT_ADCIRC
+          if (trim(model) == "adcirc") then
+            call NUOPC_DriverAddComp(driver, trim(prefix), ADCIRC_SS, &
+              SetVM, info=info, petList=petList, comp=comp, rc=rc)
             if (ChkErr(rc,__LINE__,u_FILE_u)) return
             found_comp = .true.
           end if

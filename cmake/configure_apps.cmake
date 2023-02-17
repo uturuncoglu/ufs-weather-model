@@ -96,5 +96,7 @@ if(APP MATCHES "^(LND)$")
 endif()
 
 if(APP MATCHES "^(COASTAL)$")
+  set(CMEPS      ON  CACHE BOOL "Enable CMEPS"               FORCE)
+  set(CDEPS      ON  CACHE BOOL "Enable CDEPS"               FORCE)
   set(ADCIRC     ON  CACHE BOOL "Enable ADCIRC"              FORCE)
 endif()
