@@ -134,6 +134,8 @@
        alias: inst_pres_height_surface
        canonical_units: Pa
        description: atmosphere export - instantaneous pressure land and sea surface
+     - standard_name: Sa_pslv
+       alias: air_pressure_at_sea_level
      #
      - standard_name: Sa_ptem
        canonical_units: K

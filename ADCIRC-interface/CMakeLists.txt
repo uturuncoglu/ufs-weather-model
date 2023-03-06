@@ -28,6 +28,7 @@ set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${ADCIRC_Extra_FORTRAN_FLAGS}")
 ###############################################################################
 
 include("adcirc_files.cmake")
+include("cmake/macros.cmake")
 
 ###############################################################################
 ### Options
@@ -57,6 +58,14 @@ elseif(ADCIRC_CONFIG STREQUAL "PUNSWAN")
 else()
   message(FATAL_ERROR "${ADCIRC_CONFIG} configuration is not supported! 
     Options: ADCIRC|ADCSWAN|SWAN|PADCIRC|PADCSWAN|PUNSWAN")
+endif()
+
+# User option for coupling
+set(COUPLED OFF CACHE BOOL "Build NUOPC cap for coupling.")
+if(COUPLED)
+  if(ADCIRC_CONFIG STREQUAL "PADCIRC" OR ADCIRC_CONFIG STREQUAL "PADCSWAN" OR ADCIRC_CONFIG STREQUAL "PUNSWAN")
+    set(src_files ${src_files} ${nuopc_src_files})
+  endif()
 endif()
 
 # User option for 8-byte real numbers (or 4-byte if turned off)
@@ -130,13 +139,13 @@ if(ADCIRC_CONFIG STREQUAL "ADCSWAN" OR ADCIRC_CONFIG STREQUAL "SWAN" OR
 endif()
 
 ###############################################################################
-### External libraries like metis etc.
+### Libraries
 ###############################################################################
 
+# Metis
 if(BUILD_ADCPREP)
   add_library(metis STATIC ${metis_src_files})
-  target_include_directories(metis PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/mod>
-                                           $<INSTALL_INTERFACE:mod>)
+  target_include_directories(metis PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/mod> $<INSTALL_INTERFACE:mod>)
   set_target_properties(metis PROPERTIES EXCLUDE_FROM_ALL TRUE)
   if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
     if(${CMAKE_C_COMPILER_VERSION} VERSION_GREATER 10 OR ${CMAKE_C_COMPILER_VERSION} VERSION_EQUAL 10)
@@ -145,12 +154,8 @@ if(BUILD_ADCPREP)
   endif()
 endif(BUILD_ADCPREP)
 
-###############################################################################
-### Libraries
-###############################################################################
-
 # Version
-add_library(version ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/version_cmake.F)
+add_library(version OBJECT ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/version_cmake.F)
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/version_cmake.F
   COMMAND ./adcircVersion.sh ${CMAKE_CURRENT_SOURCE_DIR}/ADCIRC
@@ -162,17 +167,29 @@ set_target_properties(version PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURREN
 set_target_properties(version PROPERTIES COMPILE_FLAGS "${Fortran_LINELENGTH_FLAG} ${Fortran_COMPILER_SPECIFIC_FLAG}")
 set_target_properties(version PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
+# Mkdir
+add_library(mkdir OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/ADCIRC/prep/mkdir.c)
+target_include_directories(mkdir PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/mod> $<INSTALL_INTERFACE:mod>)
+set_target_properties(mkdir PROPERTIES EXCLUDE_FROM_ALL TRUE)
+
+###############################################################################
+### Application 
+###############################################################################
+
 # ADCIRC
 add_library(adcirc STATIC ${src_files})
 set_target_properties(adcirc PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod)
-target_include_directories(adcirc PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/mod>
-                                         $<INSTALL_INTERFACE:mod>)
+target_include_directories(adcirc PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/mod> $<INSTALL_INTERFACE:mod>)
 target_include_directories(adcirc PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/mod)
 set_target_properties(adcirc PROPERTIES COMPILE_FLAGS "${Fortran_LINELENGTH_FLAG} ${Fortran_COMPILER_SPECIFIC_FLAG}")
-message(STATUS ${LOCAL_COMPILER_DEFINITIONS})
 target_compile_definitions(adcirc PRIVATE ${LOCAL_COMPILER_DEFINITIONS})
-target_link_libraries(adcirc PUBLIC esmf)
-add_dependencies(adcirc version)
+target_link_libraries(adcirc PUBLIC esmf $<TARGET_OBJECTS:version> $<TARGET_OBJECTS:mkdir>)
+# mpi support
+if(ADCIRC_CONFIG STREQUAL "PADCIRC" OR ADCIRC_CONFIG STREQUAL "PADCSWAN" OR ADCIRC_CONFIG STREQUAL "PUNSWAN")
+  add_mpi(adcirc)
+endif()
+# netcdf support
+add_netcdf(adcirc)
 
 # SWAN
 if(ADCIRC_CONFIG STREQUAL "PADCSWAN")
@@ -194,6 +211,7 @@ endif()
 ### Install utilities 
 ###############################################################################
 
+# Utilities
 if(BUILD_UTILITIES)
   foreach(UTIL_FILE ${util_src_files})
     get_filename_component(UTIL_FILE_EXE ${UTIL_FILE} NAME_WE)
@@ -203,34 +221,25 @@ if(BUILD_UTILITIES)
   endforeach()
 endif(BUILD_UTILITIES)
 
+# ADCPREP
 if(BUILD_ADCPREP)
+  # main
   add_executable(adcprep ${adcprep_src_files})
   set_target_properties(adcprep PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod)
   set_target_properties(adcprep PROPERTIES COMPILE_FLAGS "${Fortran_LINELENGTH_FLAG} ${Fortran_COMPILER_SPECIFIC_FLAG}")
   target_compile_definitions(adcprep PRIVATE ${LOCAL_COMPILER_DEFINITIONS})
+  target_include_directories(adcprep PRIVATE prep)
   install(TARGETS adcprep RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-  if(NetCDF_FOUND)
-    target_compile_definitions(adcprep PRIVATE ADCNETCDF)
-    if(NetCDF4_FOUND)
-      target_compile_definitions(adcprep PRIVATE HAVE_NETCDF4)
-      target_compile_definitions(adcprep PRIVATE NETCDF_CAN_DEFLATE)
-    endif()
-    target_include_directories(adcprep PRIVATE ${NetCDF_Fortran_INCLUDE_DIRS})
-    target_link_libraries(adcprep NetCDF::NetCDF_Fortran)
-  endif()
 
-  add_library(mkdir ${CMAKE_CURRENT_SOURCE_DIR}/ADCIRC/prep/mkdir.c)
-  target_include_directories(mkdir PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/mod>
-                                          $<INSTALL_INTERFACE:mod>)
-  set_target_properties(mkdir PROPERTIES EXCLUDE_FROM_ALL TRUE)
-  target_link_libraries(adcprep mkdir)
-  add_dependencies(adcprep mkdir)
+  # mkdir, version and metis
+  target_link_libraries(adcprep PUBLIC mkdir version metis)
+  add_dependencies(adcprep mkdir version metis)
 
-  target_link_libraries(adcprep version)
-  add_dependencies(adcprep version)
+  # mpi support
+  #add_mpi(adcprep)
 
-  target_link_libraries(adcprep metis)
-  add_dependencies(adcprep metis)
+  # netcdf support
+  add_netcdf(adcprep)
 endif(BUILD_ADCPREP)
 
 ###############################################################################
@@ -239,7 +248,6 @@ endif(BUILD_ADCPREP)
 
 install(
   TARGETS adcirc
-          version
   EXPORT  adcirc-config
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
