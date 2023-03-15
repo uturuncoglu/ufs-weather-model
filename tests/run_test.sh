@@ -110,7 +110,9 @@ done
 
 if [[ $DATM_CDEPS = 'true' ]] || [[ $FV3 = 'true' ]] || [[ $S2S = 'true' ]]; then
   if [[ $HAFS = 'false' ]] || [[ $FV3 = 'true' && $HAFS = 'true' ]]; then
-    atparse < ${PATHRT}/parm/${INPUT_NML:-input.nml.IN} > input.nml
+    if [[ $COASTAL = 'false' ]]; then
+      atparse < ${PATHRT}/parm/${INPUT_NML:-input.nml.IN} > input.nml
+    fi
   fi
 fi
 
@@ -210,7 +212,7 @@ if [[ $CPLCHM == .true. ]]; then
 fi
 
 if [[ $DATM_CDEPS = 'true' ]] || [[ $S2S = 'true' ]]; then
-  if [[ $HAFS = 'false' ]]; then
+  if [[ $HAFS = 'false' ]] && [[ $COASTAL = 'false' ]] ; then
     atparse < ${PATHRT}/parm/ice_in_template > ice_in
     atparse < ${PATHRT}/parm/${MOM_INPUT:-MOM_input_template_$OCNRES} > INPUT/MOM_input
     atparse < ${PATHRT}/parm/diag_table/${DIAG_TABLE:-diag_table_template} > diag_table

@@ -289,6 +289,7 @@ export atm_model=fv3
 export FV3=true
 export S2S=false
 export HAFS=false
+export COASTAL=false
 export AQM=false
 export DATM_CDEPS=false
 export DOCN_CDEPS=false
@@ -583,6 +584,7 @@ export_cpl ()
 export FV3=true
 export S2S=true
 export HAFS=false
+export COASTAL=false
 export AQM=false
 export DATM_CDEPS=false
 export DOCN_CDEPS=false
@@ -868,6 +870,7 @@ export_datm_cdeps ()
 export FV3=false
 export S2S=false
 export HAFS=false
+export COASTAL=false
 export AQM=false
 export DATM_CDEPS=true
 export DOCN_CDEPS=false
@@ -945,6 +948,11 @@ export mesh_file=cfsr_mesh.nc
 export MESH_ATM=DATM_INPUT/${mesh_file}
 export atm_datamode=${DATM_SRC}
 export stream_files=DATM_INPUT/${FILENAME_BASE}201110.nc
+export EXPORT_ALL=.false.
+export STREAM_VECTORS="Sa_u:Sa_v"
+export stream_variables="\"slmsksfc Sa_mask\" \"DSWRF Faxa_swdn\" \"DLWRF Faxa_lwdn\" \"vbdsf_ave Faxa_swvdr\" \"vddsf_ave Faxa_swvdf\" \"nbdsf_ave Faxa_swndr\" \"nddsf_ave Faxa_swndf\" \"u10m Sa_u10m\" \"v10m Sa_v10m\" \"hgt_hyblev1 Sa_z\" \"psurf Sa_pslv\" \"tmp_hyblev1 Sa_tbot\" \"spfh_hyblev1 Sa_shum\" \"ugrd_hyblev1 Sa_u\" \"vgrd_hyblev1 Sa_v\" \"q2m Sa_q2m\" \"t2m Sa_t2m\" \"pres_hyblev1 Sa_pbot\" \"precp Faxa_rain\" \"fprecp Faxa_snow\""
+export mapalgo=bilinear
+export dtlimit=1.0
 
 # MOM6 defaults; 1 degree
 export MOM_INPUT=MOM_input_template_100
@@ -995,6 +1003,7 @@ export_hafs_datm_cdeps ()
 export FV3=false
 export S2S=false
 export HAFS=true
+export COASTAL=false
 export AQM=false
 export DATM_CDEPS=true
 export DOCN_CDEPS=false
@@ -1003,6 +1012,7 @@ export JNPES=$JNPES_dflt
 export NTILES=1
 
 export atm_model=datm
+export EXPORT_ALL=.false.
 
 export DATM_IN_CONFIGURE=datm_in
 export DATM_STREAM_CONFIGURE=hafs_datm.streams.era5.IN
@@ -1012,6 +1022,7 @@ export_hafs_docn_cdeps ()
 export FV3=true
 export S2S=false
 export HAFS=true
+export COASTAL=false
 export AQM=false
 export DOCN_CDEPS=true
 export INPES=$INPES_dflt
@@ -1029,6 +1040,7 @@ export_hafs_regional ()
 export FV3=true
 export S2S=false
 export HAFS=true
+export COASTAL=false
 export AQM=false
 export DATM_CDEPS=false
 export DOCN_CDEPS=false
@@ -1097,6 +1109,7 @@ export_hafs ()
 export FV3=true
 export S2S=false
 export HAFS=true
+export COASTAL=false
 export AQM=false
 export DATM_CDEPS=false
 export DOCN_CDEPS=false
@@ -1224,4 +1237,23 @@ export NFHMAX_HF=-1
 export NFHOUT_HF=3
 export NSOUT=-1
 export OUTPUT_FH=-1
+}
+
+export_coastal ()
+{
+export FV3=false
+export S2S=false
+export HAFS=false
+export COASTAL=true
+export AQM=false
+export DATM_CDEPS=false
+export DOCN_CDEPS=false
+
+export CPL=.false.
+export CPLCHM=.false.
+export CPLFLX=.false.
+export CPLICE=.false.
+export CPLWAV=.false.
+export CPLWAV2ATM=.false.
+export CPLLND=.false.
 }
