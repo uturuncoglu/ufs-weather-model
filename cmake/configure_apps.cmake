@@ -34,6 +34,8 @@ if(APP MATCHES "^(ATM|ATMW|ATMWM|ATMAQ|ATML)$")
   else()
     message("Configuring UFS app in Atmosphere Only mode")
   endif()
+  set(CDEPS      ON  CACHE BOOL "Enable CDEPS"               FORCE)
+  message("Configuring UFS app in CDEPS Inline mode")
 endif()
 
 if(APP MATCHES "^(NG-GODAS)$")
