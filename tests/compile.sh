@@ -61,6 +61,10 @@ else
   if [[ $MACHINE_ID == gaea ]]; then
     source /lustre/f2/dev/role.epic/contrib/Lmod_init.sh
   fi
+  # Activate lua environment for local
+  if [[ $MACHINE_ID == local ]]; then
+    source /etc/profile.d/lmod.sh
+  fi
   # Load fv3 module
   module use $PATHTR/modulefiles
   modulefile="ufs_${MACHINE_ID}.${RT_COMPILER}"

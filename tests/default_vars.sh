@@ -324,6 +324,8 @@ elif [[ $MACHINE_ID = expanse ]]; then
   TPN_cpl_atmw_gdas=12; INPES_cpl_atmw_gdas=6; JNPES_cpl_atmw_gdas=8
   THRD_cpl_atmw_gdas=2; WPG_cpl_atmw_gdas=24; APB_cpl_atmw_gdas="0 311"; WPB_cpl_atmw_gdas="312 559"
 
+elif [[ $MACHINE_ID = local ]]; then
+  TPN=6
 else
 
   echo "Unknown MACHINE_ID ${MACHINE_ID}"

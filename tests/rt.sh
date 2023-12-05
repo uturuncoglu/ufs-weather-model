@@ -534,6 +534,16 @@ elif [[ $MACHINE_ID = expanse ]]; then
   PTMP=$dprefix/stmp2
   SCHEDULER=slurm
 
+elif [[ $MACHINE_ID = local ]]; then
+
+  QUEUE=workq
+  COMPILE_QUEUE=workq
+  PARTITION=
+  dprefix=/opt/scratch
+  DISKNM=/opt/RT
+  STMP=$dprefix
+  PTMP=$dprefix
+  SCHEDULER=pbs
 
 else
   die "Unknown machine ID, please edit detect_machine.sh file"
