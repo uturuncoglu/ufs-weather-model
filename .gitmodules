@@ -33,7 +33,7 @@
 [submodule "CDEPS"]
   path = CDEPS-interface/CDEPS
   url = https://github.com/uturuncoglu/CDEPS
-  branch = feature/inline
+  branch = feature/mask
 [submodule "GOCART"]
   path = GOCART
   url = https://github.com/GEOS-ESM/GOCART
