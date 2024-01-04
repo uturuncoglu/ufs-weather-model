@@ -85,6 +85,13 @@ elif [[ $MACHINE_ID = expanse ]]; then
     module purge
     module load slurm/expanse/20.02.3
 
+elif [[ $MACHINE_ID = local ]]; then
+    # We are on Linux running on local machine or under Docker container
+    if ( ! eval module help > /dev/null 2>&1 ) ; then
+        source /etc/profile.d/lmod.sh
+    fi
+    module purge
+
 else
     echo WARNING: UNKNOWN PLATFORM 1>&2
 fi
