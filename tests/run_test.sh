@@ -86,7 +86,7 @@ cp ${PATHRT}/fv3_${COMPILE_NR}.exe                 fv3.exe
 
 # modulefile for FV3 prerequisites:
 mkdir -p modulefiles
-if [[ $MACHINE_ID == linux ]]; then
+if [[ $MACHINE_ID == linux ]] || [[ $MACHINE_ID = local ]]; then
   cp ${PATHRT}/modules.fv3_${COMPILE_NR}             ./modulefiles/modules.fv3
 else
   cp ${PATHRT}/modules.fv3_${COMPILE_NR}.lua             ./modulefiles/modules.fv3.lua

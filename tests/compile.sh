@@ -63,7 +63,7 @@ else
   fi
   # Activate lua environment for local
   if [[ $MACHINE_ID == local ]]; then
-    source /etc/profile.d/lmod.sh
+    source /root/lmod/lmod/8.7/init/profile
   fi
   # Load fv3 module
   module use $PATHTR/modulefiles
@@ -123,7 +123,7 @@ export CMAKE_FLAGS
 bash -x ${PATHTR}/build.sh
 
 mv ${BUILD_DIR}/ufs_model ${PATHTR}/tests/${BUILD_NAME}.exe
-if [[ $MACHINE_ID == linux ]]; then
+if [[ $MACHINE_ID == linux ]] || [[ $MACHINE_ID == local ]]; then
   cp ${PATHTR}/modulefiles/ufs_${MACHINE_ID}.${RT_COMPILER}       ${PATHTR}/tests/modules.${BUILD_NAME}
 else
   cp ${PATHTR}/modulefiles/ufs_${MACHINE_ID}.${RT_COMPILER}.lua       ${PATHTR}/tests/modules.${BUILD_NAME}.lua
