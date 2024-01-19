@@ -63,7 +63,7 @@ else
   fi
   # Activate lua environment for local
   if [[ $MACHINE_ID == local ]]; then
-    source /root/lmod/lmod/8.7/init/profile
+    source /opt/lmod/lmod/8.7/init/profile
   fi
   # Load fv3 module
   module use $PATHTR/modulefiles
