@@ -80,6 +80,14 @@ elif [[ $SCHEDULER = 'lsf' ]]; then
     echo "Looking for fv3_conf/compile_bsub.IN_${MACHINE_ID} but it is not found. Exiting"
     exit 1
   fi
+else
+  echo "Scheduler is set to none"
+  if [[ -e $PATHRT/fv3_conf/compile_slurm.IN_${MACHINE_ID} ]]; then
+    atparse < $PATHRT/fv3_conf/compile_slurm.IN_${MACHINE_ID} > job_card
+  else
+    echo "Looking for fv3_conf/compile_slurm.IN_${MACHINE_ID} but it is not found. Exiting"
+    exit 1
+  fi
 fi
 
 ################################################################################
@@ -87,7 +95,12 @@ fi
 ################################################################################
 
 if [[ $ROCOTO = 'false' ]]; then
-  submit_and_wait job_card
+  if [[ $SCHEDULER = 'none' ]]; then
+    chmod u+x job_card
+    ( ./job_card 2>&1 1>&3 3>&- | tee err ) 3>&1 1>&2 | tee out
+  else
+    submit_and_wait job_card
+  fi
 else
   chmod u+x job_card
   ( ./job_card 2>&1 1>&3 3>&- | tee err ) 3>&1 1>&2 | tee out

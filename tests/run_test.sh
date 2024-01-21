@@ -311,6 +311,13 @@ elif [[ $SCHEDULER = 'lsf' ]]; then
     echo "Looking for fv3_conf/fv3_bsub.IN_${MACHINE_ID} but it is not found. Exiting"
     exit 1
   fi
+elif [[ $SCHEDULER = 'none' ]]; then
+  if [[ -e $PATHRT/fv3_conf/fv3_slurm.IN_${MACHINE_ID} ]]; then
+    atparse < $PATHRT/fv3_conf/fv3_slurm.IN_${MACHINE_ID} > job_card
+  else
+    echo "Looking for fv3_conf/fv3_slurm.IN_${MACHINE_ID} but it is not found. Exiting"
+    exit 1
+  fi
 fi
 
 ################################################################################
@@ -319,12 +326,8 @@ fi
 export OMP_ENV=${OMP_ENV:-""}
 if [[ $SCHEDULER = 'none' ]]; then
 
-  ulimit -s unlimited
-  if [[ $CI_TEST = 'true' ]]; then
-    eval ${OMP_ENV} mpiexec -n ${TASKS} ./fv3.exe >out 2> >(tee err >&3)
-  else
-    mpiexec -n ${TASKS} ./fv3.exe >out 2> >(tee err >&3)
-  fi
+  chmod u+x job_card
+  ( ./job_card 2>&1 1>&3 3>&- | tee err ) 3>&1 1>&2 | tee out
 
 else
 

@@ -543,7 +543,7 @@ elif [[ $MACHINE_ID = local ]]; then
   DISKNM=/opt/RT
   STMP=$dprefix
   PTMP=$dprefix
-  SCHEDULER=slurm
+  SCHEDULER=none
 
 else
   die "Unknown machine ID, please edit detect_machine.sh file"
