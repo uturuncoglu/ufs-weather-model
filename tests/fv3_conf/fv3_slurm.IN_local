@@ -30,7 +30,7 @@ export ESMF_RUNTIME_PROFILE_OUTPUT="SUMMARY"
 # Avoid job errors because of filesystem synchronization delays
 sync && sleep 1
 
-mpirun --mca btl_tcp_if_include eth0 -np @[TASKS] ./fv3.exe
+mpirun --oversubscribe --mca btl_tcp_if_include eth0 -np @[TASKS] ./fv3.exe
 
 echo "Model ended:    " `date`
 echo -n " $( date +%s )," >> job_timestamp.txt
