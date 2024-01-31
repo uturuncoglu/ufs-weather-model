@@ -82,6 +82,7 @@ if(APP MATCHES "^(HAFS|HAFSW|HAFS-ALL)$")
     set(WW3      ON  CACHE BOOL "Enable WAVEWATCH III"       FORCE)
     message("Configuring UFS app in HAFS with Waves mode")
   endif()
+  set(COP        ON  CACHE BOOL "Enable COP"                 FORCE)
 endif()
 
 if(APP MATCHES "^(ATMAERO)$")

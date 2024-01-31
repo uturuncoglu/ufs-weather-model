@@ -34,6 +34,7 @@ set(STOCH_PHYS      OFF CACHE BOOL "Enable Stochastic Physics")
 set(CMEPS           OFF CACHE BOOL "Enable CMEPS")
 set(CDEPS           OFF CACHE BOOL "Enable CDEPS")
 set(NOAHMP          OFF CACHE BOOL "Enable NOAHMP")
+set(COP             OFF CACHE BOOL "Enable COP")
 
 # Configure selected application specific components
 message("")
@@ -52,6 +53,7 @@ message("STOCH_PHYS ....... ${STOCH_PHYS}")
 message("CDEPS ............ ${CDEPS}")
 message("CMEPS ............ ${CMEPS}")
 message("NOAHMP ........... ${NOAHMP}")
+message("COP .............. ${COP}")
 
 ###############################################################################
 ### Build Options
@@ -255,6 +257,13 @@ if(NOAHMP)
 endif()
 
 ###############################################################################
+### Others [COP]
+###############################################################################
+if(COP)
+  add_subdirectory(COP)
+endif()
+
+###############################################################################
 ### UFS Library
 ###############################################################################
 add_library(ufs driver/UFSDriver.F90)
@@ -330,6 +339,12 @@ if(NOAHMP)
   add_dependencies(ufs noahmp)
   list(APPEND _ufs_defs_private FRONT_NOAHMP=lnd_comp_nuopc)
   list(APPEND _ufs_libs_public noahmp)
+endif()
+
+if(COP)
+  add_dependencies(ufs cop)
+  list(APPEND _ufs_defs_private FRONT_COP=cop_comp_nuopc)
+  list(APPEND _ufs_libs_public cop)
 endif()
 
 target_compile_definitions(ufs PRIVATE "${_ufs_defs_private}")

@@ -95,6 +95,10 @@
       use FRONT_GOCART,     only: GOCART_SS  => SetServices, &
                                   GOCART_SV  => SetVM
 #endif
+  ! - Handle build time OCN options:
+#ifdef FRONT_COP
+      use FRONT_COP,        only: COP_SS  => SetServices
+#endif
   ! - Mediator
 #ifdef FRONT_CMEPS
       use MED,              only: MED_SS     => SetServices, &
@@ -506,6 +510,14 @@
           if (trim(model) == "gocart") then
             call NUOPC_DriverAddComp(driver, trim(prefix), GOCART_SS, &
               GOCART_SV, info=info, petList=petList, comp=comp, rc=rc)
+            if (ChkErr(rc,__LINE__,u_FILE_u)) return
+            found_comp = .true.
+          end if
+#endif
+#ifdef FRONT_COP
+          if (trim(model) == "cop") then
+            call NUOPC_DriverAddComp(driver, trim(prefix), COP_SS, &
+              petList=petList, comp=comp, rc=rc)
             if (ChkErr(rc,__LINE__,u_FILE_u)) return
             found_comp = .true.
           end if
