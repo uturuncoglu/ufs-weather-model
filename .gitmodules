@@ -46,3 +46,7 @@
   path = NOAHMP-interface/noahmp
   url = https://github.com/NOAA-EMC/noahmp
   branch = develop
+[submodule "NOAHMP_V5"]
+  path = NOAHMP-interface/noahmp_ncar
+  url = https://github.com/esmf-org/noahmp
+  branch = feature/noahmp_restructured
