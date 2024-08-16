@@ -12,8 +12,10 @@ list(APPEND cdeps_share_files
   CDEPS/share/shr_assert.h
   CDEPS/share/shr_cal_mod.F90
   CDEPS/share/shr_const_mod.F90
+  CDEPS/share/shr_file_mod.F90
   CDEPS/share/shr_kind_mod.F90
   CDEPS/share/shr_log_mod.F90
+  CDEPS/share/shr_nl_mod.F90
   CDEPS/share/shr_orb_mod.F90
   CDEPS/share/shr_precip_mod.F90
   CDEPS/share/shr_strconvert_mod.F90
@@ -54,6 +56,7 @@ list(APPEND cdeps_datm_files
 list(APPEND cdeps_dice_files
   CDEPS/dice/dice_datamode_ssmi_mod.F90
   CDEPS/dice/dice_flux_atmice_mod.F90
+  CDEPS/dice/dice_datamode_cplhist_mod.F90
   CDEPS/dice/ice_comp_nuopc.F90
 )
 
