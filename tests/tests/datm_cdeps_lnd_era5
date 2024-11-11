@@ -38,6 +38,7 @@ export UFS_CONFIGURE=ufs.configure.atm_lnd.IN
 export med_model=cmeps
 export atm_model=datm
 export lnd_model=noahmp
+export samegrid_atmlnd=.false.
 export CPLMODE=ufs.nfrac.aoflux
 export RUNTYPE=startup
 export READRESTART=.false.
