@@ -7,7 +7,6 @@ else
 fi
 echo "inputdir=$inputdir,LNDRES=$LNDRES"
 
-export OCNRES=025
 V2_SFC_FILE=${V2_SFC_FILE:-false}
 
 if [ $DATM_CDEPS == true ]; then
@@ -29,20 +28,58 @@ else
     targetdir="./INPUT/$LNDRES"
   fi
 
+  # control_p8 with land component uses input from cpld
+  #if [ $S2S = false ]; then
+  #  # Orography and grid
+  #  cp @[INPUTDATA_ROOT]/FV3_fix_tiled/@[ATMRES]/oro_@[ATMRES].mx@[OCNRES].tile1.nc ${targetdir}/oro_data.tile1.nc
+  #  cp @[INPUTDATA_ROOT]/FV3_fix_tiled/@[ATMRES]/oro_@[ATMRES].mx@[OCNRES].tile2.nc ${targetdir}/oro_data.tile2.nc
+  #  cp @[INPUTDATA_ROOT]/FV3_fix_tiled/@[ATMRES]/oro_@[ATMRES].mx@[OCNRES].tile3.nc ${targetdir}/oro_data.tile3.nc
+  #  cp @[INPUTDATA_ROOT]/FV3_fix_tiled/@[ATMRES]/oro_@[ATMRES].mx@[OCNRES].tile4.nc ${targetdir}/oro_data.tile4.nc
+  #  cp @[INPUTDATA_ROOT]/FV3_fix_tiled/@[ATMRES]/oro_@[ATMRES].mx@[OCNRES].tile5.nc ${targetdir}/oro_data.tile5.nc
+  #  cp @[INPUTDATA_ROOT]/FV3_fix_tiled/@[ATMRES]/oro_@[ATMRES].mx@[OCNRES].tile6.nc ${targetdir}/oro_data.tile6.nc
+  #  cp @[INPUTDATA_ROOT]/${inputdir}/INPUT_L127_gfsv17/oro_data_ls* ${targetdir}/.
+  #  cp @[INPUTDATA_ROOT]/${inputdir}/INPUT_L127_gfsv17/oro_data_ss* ${targetdir}/.
+
+  #  cp @[INPUTDATA_ROOT]/FV3_fix_tiled/@[ATMRES]/@[ATMRES]*.nc  ${targetdir}/.
+  # 
+  #  cp @[INPUTDATA_ROOT]/CPL_FIX/a@[ATMRES]o@[OCNRES]/grid_spec.nc ${targetdir}/.
+  #  cp @[INPUTDATA_ROOT]/${inputdir}/INPUT/@[ATMRES]_grid*.nc ${targetdir}/.
+  #  cp @[INPUTDATA_ROOT]/${inputdir}/INPUT/grid_spec.nc ${targetdir}/@[ATMRES]_mosaic.nc
+  #fi
+
+  #if [ $WARM_START = .false. ]; then
+  #  # IC
+  #  if [ "$V2_SFC_FILE" = "true" ]; then
+  #    cp -r @[INPUTDATA_ROOT]/${inputdir}/INPUT_L127_mx${OCNRES}_v2_sfc/sfc_data*.nc ${targetdir}/.
+  #    cp -r @[INPUTDATA_ROOT]/${inputdir}/INPUT_L127_mx${OCNRES}_v2_sfc/gfs_data*.nc ${targetdir}/.
+  #    cp -r @[INPUTDATA_ROOT]/${inputdir}/INPUT_L127_mx${OCNRES}_v2_sfc/gfs_ctrl.nc ${targetdir}/.
+  #  else
+  #    cp -r @[INPUTDATA_ROOT]/${inputdir}/INPUT_L127_mx${OCNRES}/sfc_data*.nc ${targetdir}/.
+  #    cp -r @[INPUTDATA_ROOT]/${inputdir}/INPUT_L127_mx${OCNRES}/gfs_data*.nc ${targetdir}/.
+  #    cp -r @[INPUTDATA_ROOT]/${inputdir}/INPUT_L127_mx${OCNRES}/gfs_ctrl*.nc ${targetdir}/.
+  #  fi
+  #else
+  #  # FV3 related files
+  #  cp -r ../${DEP_RUN}${SUFFIX}/${targetdir}/* ${targetdir}/.
+  #  cp -r ../${DEP_RUN}${SUFFIX}/RESTART/${RESTART_FILE_PREFIX}.* ${targetdir}/.
+  #  for RFILE in INPUT/${RESTART_FILE_PREFIX}.*; do
+  #    [ -e $RFILE ] || exit 1
+  #    RFILE_OLD=$(basename $RFILE)
+  #       mv -f $RFILE ${targetdir}/"${RFILE_OLD//${RESTART_FILE_PREFIX}./}"
+  #  done
+  #  if [[ $IAU_OFFSET == 6 ]] && [[ $FHROT -le 6 ]]; then
+  #    cp @[INPUTDATA_ROOT]/${inputdir}/INPUT_L127_mx${OCNRES}/fv_increment*.nc INPUT/.
+  #  fi
+  #  # copy land restart files
+  #  cp ../${DEP_RUN}${SUFFIX}/ufs.cpld.lnd.out.${RESTART_FILE_SUFFIX_SECS}.tile*.nc RESTART/.
+  #  # CMEPS restart and pointer files
+  #  RFILE=ufs.cpld.cpl.r.${RESTART_FILE_SUFFIX_SECS}.nc
+  #  cp  ../${DEP_RUN}${SUFFIX}/RESTART/${RFILE} .
+  #  ls -1 ${RFILE}>rpointer.cpl
+  #fi
+
   if [ $WARM_START = .false. ]; then
-    if [ $S2S = true ]; then
-      if [ "$V2_SFC_FILE" = "true" ]; then
-        cp -r @[INPUTDATA_ROOT]/${inputdir}/INPUT_L127_v2_sfc/sfc_data.tile*.nc ${targetdir}/.
-      else
-        cp -r @[INPUTDATA_ROOT]/${inputdir}/INPUT_L127/sfc_data.tile*.nc ${targetdir}/.
-      fi
-    else
-      if [ "$V2_SFC_FILE" = "true" ]; then
-        cp -r @[INPUTDATA_ROOT]/${inputdir}/INPUT_L127_mx${OCNRES}_v2_sfc/sfc_data.tile*.nc ${targetdir}/.
-      else
-        cp -r @[INPUTDATA_ROOT]/${inputdir}/INPUT_L127_mx${OCNRES}/sfc_data.tile*.nc ${targetdir}/.
-      fi
-    fi
+    cp -r @[INPUTDATA_ROOT]/${inputdir}/INPUT_L127/sfc_data.tile*.nc ${targetdir}/.
   else
     # land restart file
     cp ../${DEP_RUN}${SUFFIX}/ufs.cpld.lnd.out.${RESTART_FILE_SUFFIX_SECS}.tile*.nc RESTART/.
@@ -50,9 +87,12 @@ else
     RFILE=ufs.cpld.cpl.r.${RESTART_FILE_SUFFIX_SECS}.nc
     cp  ../${DEP_RUN}${SUFFIX}/RESTART/${RFILE} .
     ls -1 ${RFILE}>rpointer.cpl
+    # link grid spec file
   fi
 fi
 
+# running land in different resolution
+# note that CMEPS mediator has some limitiations to run land in different resolution than atmosphere
 if [ "$ATMRES" != "$LNDRES" ]; then
   rsync -arv @[INPUTDATA_ROOT]/FV3_fix_tiled/@[LNDRES]/@[LNDRES].maximum_snow_albedo.tile*.nc ${targetdir}/.
   rsync -arv @[INPUTDATA_ROOT]/FV3_fix_tiled/@[LNDRES]/@[LNDRES].slope_type.tile*.nc ${targetdir}/.
@@ -61,12 +101,12 @@ if [ "$ATMRES" != "$LNDRES" ]; then
   rsync -arv @[INPUTDATA_ROOT]/FV3_fix_tiled/@[LNDRES]/@[LNDRES].substrate_temperature.tile*.nc ${targetdir}/.
   rsync -arv @[INPUTDATA_ROOT]/FV3_fix_tiled/@[LNDRES]/@[LNDRES].vegetation_greenness.tile*.nc ${targetdir}/.
   rsync -arv @[INPUTDATA_ROOT]/FV3_fix_tiled/@[LNDRES]/@[LNDRES].vegetation_type.tile*.nc ${targetdir}/.
-  rsync -arv @[INPUTDATA_ROOT]/FV3_fix_tiled/@[LNDRES]/oro_@[LNDRES].mx*.tile1.nc ${targetdir}/oro_data.tile1.nc
-  rsync -arv @[INPUTDATA_ROOT]/FV3_fix_tiled/@[LNDRES]/oro_@[LNDRES].mx*.tile2.nc ${targetdir}/oro_data.tile2.nc
-  rsync -arv @[INPUTDATA_ROOT]/FV3_fix_tiled/@[LNDRES]/oro_@[LNDRES].mx*.tile3.nc ${targetdir}/oro_data.tile3.nc
-  rsync -arv @[INPUTDATA_ROOT]/FV3_fix_tiled/@[LNDRES]/oro_@[LNDRES].mx*.tile4.nc ${targetdir}/oro_data.tile4.nc
-  rsync -arv @[INPUTDATA_ROOT]/FV3_fix_tiled/@[LNDRES]/oro_@[LNDRES].mx*.tile5.nc ${targetdir}/oro_data.tile5.nc
-  rsync -arv @[INPUTDATA_ROOT]/FV3_fix_tiled/@[LNDRES]/oro_@[LNDRES].mx*.tile6.nc ${targetdir}/oro_data.tile6.nc
+  rsync -arv @[INPUTDATA_ROOT]/FV3_fix_tiled/@[LNDRES]/oro_@[LNDRES].mx@[OCNRES].tile1.nc ${targetdir}/oro_data.tile1.nc
+  rsync -arv @[INPUTDATA_ROOT]/FV3_fix_tiled/@[LNDRES]/oro_@[LNDRES].mx@[OCNRES].tile2.nc ${targetdir}/oro_data.tile2.nc
+  rsync -arv @[INPUTDATA_ROOT]/FV3_fix_tiled/@[LNDRES]/oro_@[LNDRES].mx@[OCNRES].tile3.nc ${targetdir}/oro_data.tile3.nc
+  rsync -arv @[INPUTDATA_ROOT]/FV3_fix_tiled/@[LNDRES]/oro_@[LNDRES].mx@[OCNRES].tile4.nc ${targetdir}/oro_data.tile4.nc
+  rsync -arv @[INPUTDATA_ROOT]/FV3_fix_tiled/@[LNDRES]/oro_@[LNDRES].mx@[OCNRES].tile5.nc ${targetdir}/oro_data.tile5.nc
+  rsync -arv @[INPUTDATA_ROOT]/FV3_fix_tiled/@[LNDRES]/oro_@[LNDRES].mx@[OCNRES].tile6.nc ${targetdir}/oro_data.tile6.nc
   rsync -arv @[INPUTDATA_ROOT]/${inputdir}/INPUT/@[LNDRES]_grid.tile*.nc ${targetdir}/.
   rsync -arv @[INPUTDATA_ROOT]/${inputdir}/INPUT/grid_spec.nc ${targetdir}/@[LNDRES]_mosaic.nc
 fi

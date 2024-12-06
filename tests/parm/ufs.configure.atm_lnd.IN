@@ -26,6 +26,7 @@ MED_attributes::
   history_option = nhours
   history_ymd = -999
   coupling_mode = @[CPLMODE]
+  samegrid_atmlnd = @[samegrid_atmlnd]
 ::
 
 # ATM #
