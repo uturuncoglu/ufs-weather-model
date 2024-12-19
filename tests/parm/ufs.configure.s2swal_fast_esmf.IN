@@ -74,7 +74,15 @@ WAV_attributes::
   Verbosity = 0
   OverwriteSlice = false
   mesh_wav = @[MESH_WAV]
-  user_sets_restname = @[WW3_user_sets_restname]
+  user_histname = @[WW3_user_histname]
+  use_historync = @[WW3_historync]
+  use_restartnc = @[WW3_restartnc]
+  restart_from_binary = @[WW3_restart_from_binary]
+  pio_typename = @[WW3_PIO_FORMAT]
+  pio_numiotasks = @[WW3_PIO_IOTASKS]
+  pio_stride = @[WW3_PIO_STRIDE]
+  pio_rearranger = @[WW3_PIO_REARR]
+  pio_root = @[WW3_PIO_ROOT]
 ::
 
 # LND #
@@ -123,13 +131,13 @@ runSeq::
    @@[coupling_interval_fast_sec]
      MED med_phases_prep_atm
      MED med_phases_prep_ice
-     MED med_phases_prep_lnd
      MED med_phases_prep_wav_accum
      MED med_phases_prep_wav_avg
+     MED med_phases_prep_lnd
      MED -> ATM :remapMethod=redist
      MED -> ICE :remapMethod=redist
-     MED -> LND :remapMethod=redist
      MED -> WAV :remapMethod=redist
+     MED -> LND :remapMethod=redist
      ATM phase1
      ATM -> CHM
      CHM
@@ -142,10 +150,10 @@ runSeq::
      MED med_phases_post_atm
      ICE -> MED :remapMethod=redist
      MED med_phases_post_ice
-     LND -> MED :remapMethod=redist
-     MED med_phases_post_lnd
      WAV -> MED :remapMethod=redist
      MED med_phases_post_wav
+     LND -> MED :remapMethod=redist
+     MED med_phases_post_lnd
      MED med_phases_ocnalb_run
      MED med_phases_prep_ocn_accum
    @
@@ -163,13 +171,12 @@ DRIVER_attributes::
 MED_attributes::
       ATM_model = @[atm_model]
       ICE_model = @[ice_model]
-      LND_model = @[lnd_model]
       OCN_model = @[ocn_model]
       WAV_model = @[wav_model]
+      LND_model = @[lnd_model]
       coupling_mode = @[CPLMODE]
       pio_rearranger = @[pio_rearranger]
       ocean_albedo_limit = @[ocean_albedo_limit]
-      samegrid_atmlnd = @[samegrid_atmlnd]
 ::
 
 ALLCOMP_attributes::
@@ -184,6 +191,7 @@ ALLCOMP_attributes::
       restart_n = @[RESTART_N]
       restart_option = nhours
       restart_ymd = -999
+      write_restart_at_endofrun = @[WRITE_ENDOFRUN_RESTART]
       dbug_flag = @[cap_dbug_flag]
       stop_n = @[FHMAX]
       stop_option = nhours
