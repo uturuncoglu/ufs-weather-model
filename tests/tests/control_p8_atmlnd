@@ -97,7 +97,7 @@ export LIST_FILES="sfcf000.tile1.nc \
                    ufs.cpld.lnd.out.2021-03-23-21600.tile5.nc \
                    ufs.cpld.lnd.out.2021-03-23-21600.tile6.nc"
 
-export FV3_RUN="control_run.IN noahmp_run.IN"
+export FV3_RUN="noahmp_run.IN"
 
 export CPLLND=.true.
 export CPLLND2ATM=.true.
