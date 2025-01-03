@@ -52,6 +52,7 @@ export CALC_SNET=.true.
 export layout_x=3
 export layout_y=8
 export LNDRES=C96
+export ATMRES=$LNDRES
 export mosaic_file="INPUT/${LNDRES}_mosaic.nc"
 export coupling_interval_sec=3600
 export snow_albedo_option=2

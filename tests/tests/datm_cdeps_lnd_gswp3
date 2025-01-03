@@ -56,6 +56,7 @@ export CALC_SNET=.true.
 export layout_x=3
 export layout_y=8
 export LNDRES=C96
+export ATMRES=$LNDRES
 export mosaic_file="INPUT/${LNDRES}_mosaic.nc"
 export coupling_interval_sec=3600
 export snow_albedo_option=1
@@ -63,4 +64,3 @@ export precip_partition_option=4
 export initial_albedo=0.25
 export TOPOEDITS=""
 export FV3_RUN="lnd_datm_cdeps_gswp.IN noahmp_run.IN"
-
