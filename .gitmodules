@@ -5,7 +5,7 @@
 [submodule "WW3"]
   path = WW3
   url = https://github.com/JessicaMeixner-NOAA/WW3
-  branch = devufs20241211develop20240111
+  branch = devufs20241211develop20240116
 [submodule "stochastic_physics"]
   path = stochastic_physics
   url = https://github.com/NOAA-PSL/stochastic_physics
