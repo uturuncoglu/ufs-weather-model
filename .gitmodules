@@ -16,8 +16,8 @@
   branch = feature/coastal_app
 [submodule "CMEPS"]
   path = CMEPS-interface/CMEPS
-  url = https://github.com/oceanmodeling/CMEPS
-  branch = feature/coastalapp
+  url = https://github.com/uturuncoglu/CMEPS
+  branch = hotfix/interpolation_type
 [submodule "HYCOM"]
   path = HYCOM-interface/HYCOM
   url = https://github.com/NOAA-EMC/HYCOM-src
